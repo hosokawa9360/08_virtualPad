@@ -1,8 +1,10 @@
 var itemsLayer;
 var cart;
 var xSpeed = 0; //カートの移動速度
-var left; //左ボタン
-var right; //右ボタン
+
+var touchOrigin; //タッチ開始したときに表示するスプライト
+var touching = false; //タッチしているかFlag
+var touchEnd; //タッチが終了したときに表示するスプライト
 
 var gameScene = cc.Scene.extend({
   onEnter: function() {
@@ -12,7 +14,6 @@ var gameScene = cc.Scene.extend({
     this.addChild(gameLayer);
   }
 });
-
 
 var game = cc.Layer.extend({
   init: function() {
@@ -38,21 +39,7 @@ var game = cc.Layer.extend({
     cart = cc.Sprite.create(res.cart_png);
     topLayer.addChild(cart, 0);
     cart.setPosition(240, 24);
-    //左ボタン
-    left = cc.Sprite.create(res.leftbutton_png);
-    topLayer.addChild(left, 0);
-    left.setPosition(40, 160)
-    left.setOpacity(128)
-
-    //右ボタン
-    right = cc.Sprite.create(res.rightbutton_png);
-    topLayer.addChild(right, 0);
-    right.setPosition(440, 160);
-    right.setOpacity(128)
-
-    //addItemを1秒ごと呼び出す
     this.schedule(this.addItem, 1);
-
     //タッチイベントのリスナー追加
     cc.eventManager.addListener(touchListener, this);
     //カートの移動のため　Update関数を1/60秒ごと実行させる　
@@ -65,18 +52,22 @@ var game = cc.Layer.extend({
   removeItem: function(item) {
     itemsLayer.removeChild(item);
   },
-    //カートの移動のため　Update関数を1/60秒ごと実行させる関数
-  update:function(dt){
-      if(xSpeed>0){//スピードが正の値（右方向移動）
-        //　カートの向きを判定させる
-          cart.setFlippedX(true);
+  //カートの移動のため　Update関数を1/60秒ごと実行させる関数
+  update: function(dt) {
+    if (touching) {
+    //touchEnd(ドラックしている位置）とタッチ開始位置の差を計算する
+    //そのままだと値が大きすぎるので50で割る
+    xSpeed = (touchEnd.getPosition().x - touchOrigin.getPosition().x) / 50;
+      if (xSpeed > 0) {
+        cart.setFlippedX(true);
       }
-      if(xSpeed<0){//スピードが負の値（左方向移動）
-          cart.setFlippedX(false);
+      if (xSpeed < 0) {
+        cart.setFlippedX(false);
       }
-      //カートの位置を更新する
-      cart.setPosition(cart.getPosition().x+xSpeed,cart.getPosition().y);
+      cart.setPosition(cart.getPosition().x + xSpeed, cart.getPosition().y);
+    }
   }
+
 });
 
 var Item = cc.Sprite.extend({
@@ -121,28 +112,31 @@ var Item = cc.Sprite.extend({
   }
 });
 
-//タッチリスナーの実装
+//バーチャルアナログパッド用のタッチリスナーの実装
 var touchListener = cc.EventListener.create({
-    event: cc.EventListener.TOUCH_ONE_BY_ONE,
-    swallowTouches: true,
-    onTouchBegan: function (touch, event) {
-      //タッチされた場所が、画面の左側だったら
-        if(touch.getLocation().x < 240){
-            xSpeed = -2;
-            left.setOpacity(255);
-            right.setOpacity(128);
-        }
-        else{
-            xSpeed = 2;
-            right.setOpacity(255);
-            left.setOpacity(128);
-        }
-        return true;
-    },
-    //タッチを止めたときは、移動スピードを0にする
-    onTouchEnded:function (touch, event) {
-        xSpeed = 0;
-        left.setOpacity(128);
-        right.setOpacity(128);
-    }
+  event: cc.EventListener.TOUCH_ONE_BY_ONE,
+  swallowTouches: true,
+  onTouchBegan: function(touch, event) {
+    //タッチ開始位置にスプライトを表示させる
+    touchOrigin = cc.Sprite.create(res.touchorigin_png);
+    topLayer.addChild(touchOrigin, 0);
+    touchOrigin.setPosition(touch.getLocation().x, touch.getLocation().y);
+　　//タッチ位置にドラック用スプライトを表示させる
+    touchEnd = cc.Sprite.create(res.touchend_png);
+    topLayer.addChild(touchEnd, 0);
+    touchEnd.setPosition(touch.getLocation().x, touch.getLocation().y);
+    //タッチしているぞflagをON
+    touching = true;
+    return true;
+  },
+  onTouchMoved: function(touch, event) {
+    //移動中の指の位置にドラック用スプライトを表示させる
+    touchEnd.setPosition(touch.getLocation().x, touchEnd.getPosition().y);
+  },
+  onTouchEnded: function(touch, event) {
+    //タッチ終了のときはスプライトを消す　タッチflagをOFF
+    touching = false;
+    topLayer.removeChild(touchOrigin);
+    topLayer.removeChild(touchEnd);
+  }
 })
