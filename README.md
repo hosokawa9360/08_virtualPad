@@ -11,7 +11,7 @@ https://github.com/hosokawa9360/08_virtualPad/issues/1
  - 画面の右側をタッチしたら、カートが右に移動する（右矢印ボタンは半透明になる）  
  - 画面の左側をタッチしたら、カートが左に移動する（左矢印ボタンは半透明になる）  
 
- ### その３　バーチャルアナログパッド（タッチ＆ドラック）でカートを操作する
+### その３　バーチャルアナログパッド（タッチ＆ドラック）でカートを操作する
 （resouce.jsに追加）
  touchorigin_png: "res/touchorigin.png",
  touchend_png: "res/touchend.png"
@@ -64,3 +64,6 @@ https://github.com/hosokawa9360/08_virtualPad/issues/1
    }
  }
  ```
+
+ ### その４　指の動きだけでカートを操作する  
+ 移動方向が限られたゲームでは、ボタンやパッドで視覚的に表現しなくても直観的な操作ができます。
