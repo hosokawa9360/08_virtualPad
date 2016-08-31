@@ -2,9 +2,9 @@ var itemsLayer;
 var cart;
 var xSpeed = 0; //カートの移動速度
 
-var touchOrigin; //タッチ開始したときに表示するスプライト
-var touching = false; //タッチしているかFlag
-var touchEnd; //タッチが終了したときに表示するスプライト
+var detectedX;　 //現在タッチしているX座標
+var savedX;　 //前回タッチしていたX座標
+var touching = false;　 //タッチ状況管理用flag
 
 var gameScene = cc.Scene.extend({
   onEnter: function() {
@@ -55,9 +55,18 @@ var game = cc.Layer.extend({
   //カートの移動のため　Update関数を1/60秒ごと実行させる関数
   update: function(dt) {
     if (touching) {
-    //touchEnd(ドラックしている位置）とタッチ開始位置の差を計算する
-    //そのままだと値が大きすぎるので50で割る
-    xSpeed = (touchEnd.getPosition().x - touchOrigin.getPosition().x) / 50;
+      //現在タッチしているX座標と前回の座標の差分をとる
+      var deltaX = savedX - detectedX;
+      //差分でカートが右にいくか左にいくかを判断する
+      if (deltaX > 0) {
+        xSpeed = -2;
+      }
+      if (deltaX < 0) {
+        xSpeed = 2;
+      }
+      //saveXに今回のX座標を代入し、onTouchMovedイベントで
+      //detectedX変数が更新されても対応できるようにする
+      savedX = detectedX;
       if (xSpeed > 0) {
         cart.setFlippedX(true);
       }
@@ -117,26 +126,19 @@ var touchListener = cc.EventListener.create({
   event: cc.EventListener.TOUCH_ONE_BY_ONE,
   swallowTouches: true,
   onTouchBegan: function(touch, event) {
-    //タッチ開始位置にスプライトを表示させる
-    touchOrigin = cc.Sprite.create(res.touchorigin_png);
-    topLayer.addChild(touchOrigin, 0);
-    touchOrigin.setPosition(touch.getLocation().x, touch.getLocation().y);
-　　//タッチ位置にドラック用スプライトを表示させる
-    touchEnd = cc.Sprite.create(res.touchend_png);
-    topLayer.addChild(touchEnd, 0);
-    touchEnd.setPosition(touch.getLocation().x, touch.getLocation().y);
-    //タッチしているぞflagをON
     touching = true;
+    //現在タッチ中のX座標を保持する変数へ代入
+    detectedX = touch.getLocation().x;
+    //前回タッチしていたX座標として代入
+    savedX = detectedX;
     return true;
   },
   onTouchMoved: function(touch, event) {
-    //移動中の指の位置にドラック用スプライトを表示させる
-    touchEnd.setPosition(touch.getLocation().x, touchEnd.getPosition().y);
+    //現在タッチ中のX座標を保持する変数へ代入
+    detectedX = touch.getLocation().x;
   },
   onTouchEnded: function(touch, event) {
-    //タッチ終了のときはスプライトを消す　タッチflagをOFF
+    //タッチflagをOFF
     touching = false;
-    topLayer.removeChild(touchOrigin);
-    topLayer.removeChild(touchEnd);
   }
 })

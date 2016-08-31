@@ -66,4 +66,40 @@ https://github.com/hosokawa9360/08_virtualPad/issues/1
  ```
 
  ### その４　指の動きだけでカートを操作する  
- 移動方向が限られたゲームでは、ボタンやパッドで視覚的に表現しなくても直観的な操作ができます。
+ 移動方向が限られたゲームでは、ボタンやパッドで視覚的に表現しなくても直観的な操作ができます。 画面をタッチして指を左右に動かすとカートが動くようにコーディングしましょう。
+
+ ##### グローバル変数
+ ```
+ var detectedX;　 //現在タッチしているX座標
+ var savedX;　 //前回タッチしていたX座標
+ var touching = false;　 //タッチ状況管理用flag
+ ```
+ ##### touchListener関数の処理
+ //fingerOperation用のタッチリスナーの実装
+ ```
+ var touchListener = cc.EventListener.create({
+   event: cc.EventListener.TOUCH_ONE_BY_ONE,
+   swallowTouches: true,
+   onTouchBegan: function(touch, event) {
+     touching = true;
+     //現在タッチ中のX座標を保持する変数へ代入
+     detectedX = touch.getLocation().x;
+     //前回タッチしていたX座標として代入
+     savedX = detectedX;
+     return true;
+   },
+   onTouchMoved: function(touch, event) {
+     //現在タッチ中のX座標を保持する変数へ代入
+     detectedX = touch.getLocation().x;
+   },
+   onTouchEnded: function(touch, event) {
+     //タッチflagをOFF
+     touching = false;
+   }
+ })
+ ```
+ `touching`変数に`true`,または`false`を設定する
+ `onTouchBegan`イベントで  
+ `detectedX`変数, `savedX`変数の初期化
+ `onTouchMoved`イベントで  
+ `detectedX`変数を更新  
